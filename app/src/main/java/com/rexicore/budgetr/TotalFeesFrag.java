@@ -117,7 +117,12 @@ public class TotalFeesFrag extends Fragment {
             } while (expensesCursor.moveToNext());
         }
         String amount = "$";
-        amount += NumberFormat.getInstance().format(totalFeeAmount);
+        // Format number to #,###.##
+        NumberFormat formatter = NumberFormat.getInstance();
+        formatter.setMinimumFractionDigits(2);
+        formatter.setMaximumFractionDigits(2);
+        amount += formatter.format(totalFeeAmount);
+        // Show number
         totalFeesAmountTextView.setText(amount);
     }
 }

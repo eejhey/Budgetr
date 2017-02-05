@@ -47,7 +47,10 @@ public class ExpenseListAdapter extends SimpleCursorAdapter {
         String title = c.getString(c.getColumnIndex(from[0]));
         String amount = "$";
         int amt = c.getInt(c.getColumnIndex(from[1]));
-        amount += NumberFormat.getInstance().format(amt);
+        NumberFormat formatter = NumberFormat.getInstance();
+        formatter.setMinimumFractionDigits(2);
+        formatter.setMaximumFractionDigits(2);
+        amount += formatter.format(amt);
 
         expenseTitle.setText(title);
         expenseAmount.setText(amount);
