@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Budgetr</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="total_expenses">Total Expenses</string>
+    <string name="total_expenses_ph">$2,000</string>
+    <string name="fee_ph">Refrigerator</string>
+    <string name="price_ph">$1100</string>
+    <string name="new_expense">New Expense</string>
+    <string name="what_is_expense">What do you need to pay?</string>
+    <string name="how_much">How much does it cost?</string>
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="remove_expense">Remove Expense</string>
+    <string name="confirm_expense_remove">Do you want to remove this expense?</string>
+    <string name="delete">Delete</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+</resources>
