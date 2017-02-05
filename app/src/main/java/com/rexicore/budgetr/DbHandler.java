@@ -20,12 +20,15 @@ public class DbHandler {
     private DbHelper dbHelper;
     private SQLiteDatabase db;
 
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 4;
     private static final String DB_NAME = "Budgetr.db";
     private static final String EXPENSES_TBL = "Expenses";
+    private static final String GROUPS_TBL = "Groups";
     public static final String FEES = "Fees";
     public static final String FEE_DUE = "AmountDue";
+    public static final String GROUP = "mGroup";
     public static final String CATEGORY = "Category";
+    public static final String GROUP_NAME = "Name";
 
     /**
      * Constructor methods
@@ -41,11 +44,12 @@ public class DbHandler {
 
     public boolean newFee(Expense expense) {
         String title = expense.getTitle();
-        String amount = Integer.toString(expense.getAmount());
+        String amount = Double.toString(expense.getAmount());
+        String group = expense.getGroup();
         String category = expense.getCategory();
 
         try{
-            _newFee(title, amount, category);
+            _newFee(title, amount, group, category);
         } catch (DbException e) {
             e.printStackTrace();
             return false;
@@ -54,8 +58,8 @@ public class DbHandler {
         return true;
     }
 
-    private void _newFee(String title, String amount, String category) throws DbException{
-        if (title.length() < 1 || amount.length() < 1 || category.length() < 1) {
+    private void _newFee(String title, String amount, String group, String category) throws DbException{
+        if (title.length() < 1 || category.length() < 1) {
             throw new DbException("Missing parameters");
         }
         if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "Adding new fee: " +
@@ -65,6 +69,7 @@ public class DbHandler {
         ContentValues cv = new ContentValues();
         cv.put(FEES, title);
         cv.put(FEE_DUE, amount);
+        cv.put(GROUP, group);
         cv.put(CATEGORY, category);
         db.insert(EXPENSES_TBL, null, cv);
         db.close();
@@ -135,6 +140,88 @@ public class DbHandler {
         }
     }
 
+    public boolean newGroup(String name) {
+        try {
+            return _newGroup(name);
+        } catch (DbException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean _newGroup(String name) throws DbException {
+        if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "Adding new plan.");
+
+        if (name.length() < 1) {
+            throw new DbException("BRDB-lfaiew99df0: Group name is missing.");
+        }
+
+        db = dbHelper.getWritableDatabase();
+
+        ContentValues cv = new ContentValues();
+        cv.put(GROUP_NAME, name);
+        db.insert(GROUPS_TBL, null, cv);
+
+        return true;
+    }
+
+    public Cursor getGroups() {
+        try {
+            return _getGroups();
+        } catch (DbException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private Cursor _getGroups() throws DbException {
+        db = dbHelper.getWritableDatabase();
+
+        Cursor c = db.query(
+                GROUPS_TBL,
+                new String[] {"_id", GROUP_NAME},
+                null, null, null, null, null
+        );
+
+        return c;
+    }
+
+    public boolean removeGroup(int id) {
+        try {
+            return _removeGroup(id);
+        } catch (DbException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean _removeGroup(int id) throws DbException {
+        if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "Removing group: " + id);
+
+        db = dbHelper.getWritableDatabase();
+
+        // Check if exists
+        Cursor check = db.query(
+                GROUPS_TBL,
+                new String[] {"_id"},
+                "_id = ?",
+                new String[] {Integer.toString(id)},
+                null, null, null
+        );
+
+        if (check.moveToFirst()) {
+            // Group exists, let's remove it
+            db.delete(GROUPS_TBL, "_id = ?", new String[] {Integer.toString(id)});
+            check.close();
+
+            return true;
+        } else {
+            throw new DbException("Plan does not exist.");
+        }
+
+    }
+
     class DbHelper extends SQLiteOpenHelper {
 
         public DbHelper(Context context) {
@@ -159,13 +246,19 @@ public class DbHandler {
 //            }
             String CREATE_EXPENSES_TBL = "CREATE TABLE IF NOT EXISTS " + EXPENSES_TBL + "(" +
                     "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    FEES + " VARCHAR(255), " +
-                    FEE_DUE + " INTEGER, " +
-                    CATEGORY + " VARCHAR(32))";
+                    FEES + " VARCHAR(64), " +
+                    FEE_DUE + " REAL, " +
+                    GROUP + " VARCHAR(64), " +
+                    CATEGORY + " VARCHAR(10))";
+
+            String CREATE_GROUPS_TBL = "CREATE TABLE IF NOT EXISTS " + GROUPS_TBL + "(" +
+                    "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    GROUP_NAME + " VARCHAR(64))";
 
             try {
                 if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "BRDB-sfaih000: Creating local tables.");
                 db.execSQL(CREATE_EXPENSES_TBL);
+                db.execSQL(CREATE_GROUPS_TBL);
                 if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "BRDB-aleif001: Local tables created.");
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -175,6 +268,11 @@ public class DbHandler {
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             String DROP_EXPENSES_TBL = "DROP TABLE IF EXISTS " + EXPENSES_TBL;
+            String DROP_GROUPS_TBL = "DROP TABLE IF EXISTS " + GROUPS_TBL;
+
+            // Remove existing tables and remake
+            db.execSQL(DROP_EXPENSES_TBL);
+            db.execSQL(DROP_GROUPS_TBL);
             onCreate(db);
         }
     }

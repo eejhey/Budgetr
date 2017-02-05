@@ -110,10 +110,10 @@ public class TotalFeesFrag extends Fragment {
         expenseListView.setAdapter(cursorAdapter);
 
         // Update total expenses due
-        int totalFeeAmount = 0;
+        double totalFeeAmount = 0;
         if (expensesCursor.moveToFirst()) {
             do {
-                totalFeeAmount += expensesCursor.getInt(expensesCursor.getColumnIndex(DbHandler.FEE_DUE));
+                totalFeeAmount += expensesCursor.getDouble(expensesCursor.getColumnIndex(DbHandler.FEE_DUE));
             } while (expensesCursor.moveToNext());
         }
         String amount = "$";

@@ -18,4 +18,9 @@
     <string name="delete">Delete</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="all_plans">All Plans</string>
+    <string name="group_name">Name of Plan</string>
+    <string name="new_group">New Plan</string>
+    <string name="remove_plan">Remove Plan</string>
+    <string name="confirm_remove_plan">Do you want to remove this plan and all its expenses?</string>
 </resources>

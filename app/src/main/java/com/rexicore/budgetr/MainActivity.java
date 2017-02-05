@@ -17,10 +17,13 @@ import android.view.View;
 import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity
-            implements NavigationView.OnNavigationItemSelectedListener, NewExpensesWindow.NewExpensesDialogListener {
+            implements NavigationView.OnNavigationItemSelectedListener, NewExpensesWindow.NewExpensesDialogListener,
+            NewGroupWindow.NewGroupWindowListener {
 
     private FragmentManager fragmentManager;
     private TotalFeesFrag totalFeesFrag;
+    private MonthlyFeesFrag monthlyFeesFrag;
+    private int navigationDrawerIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +36,16 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                buildNewExpensesWindow();
+                switch (navigationDrawerIndex) {
+                    case 0:
+                        buildNewExpensesWindow();
+                        break;
+                    case 1:
+                        buildNewGroupWindow();
+                        break;
+                    default:
+                        break;
+                }
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
@@ -51,6 +63,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().getItem(0).setChecked(true);
 
         totalFeesFrag = new TotalFeesFrag();
+        monthlyFeesFrag = new MonthlyFeesFrag();
 
         fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction().replace(R.id.content_frame, totalFeesFrag).commit();
@@ -100,12 +113,26 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void updateFragUI() {
-        totalFeesFrag.updateUI();
+        switch (navigationDrawerIndex) {
+            case 0:
+                totalFeesFrag.updateUI();
+                break;
+            case 1:
+                monthlyFeesFrag.updateUI();
+                break;
+            default:
+                break;
+        }
     }
 
     private void buildNewExpensesWindow() {
         NewExpensesWindow dialog = new NewExpensesWindow();
         dialog.show(getSupportFragmentManager(), "new_expenses");
+    }
+
+    private void buildNewGroupWindow() {
+        NewGroupWindow dialog = new NewGroupWindow();
+        dialog.show(getSupportFragmentManager(), "new_group");
     }
 
     @Override
@@ -115,16 +142,35 @@ public class MainActivity extends AppCompatActivity
         EditText expenseAmountET = (EditText) dialog.getDialog().findViewById(R.id.new_expense_amount_et);
         // Get expense info
         String title = expenseTitleET.getText().toString();
-        int amount = Integer.parseInt(expenseAmountET.getText().toString());
+        double amount = Double.parseDouble(expenseAmountET.getText().toString());
         // Add to db
         DbHandler db = new DbHandler(this);
         Expense expense = new Expense(-1, title, amount, "gen");
         db.newFee(expense);
         updateFragUI();
+        db.close();
     }
 
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
+        dialog.getDialog().cancel();
+    }
+
+    @Override
+    public void onNewGroupDialogPositiveClick(DialogFragment dialog) {
+        // Get view
+        EditText newGroupName = (EditText) dialog.getDialog().findViewById(R.id.new_group_name_edittext);
+        // Get group name
+        String group = newGroupName.getText().toString();
+        // Add to db
+        DbHandler db = new DbHandler(this);
+        db.newGroup(group);
+        updateFragUI();
+        db.close();
+    }
+
+    @Override
+    public void onNewGroupDialogNegativeClick(DialogFragment dialog) {
         dialog.getDialog().cancel();
     }
 
@@ -135,12 +181,14 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.main_page) {
             // Set main fragment here
+            navigationDrawerIndex = 0;
             fragmentManager.beginTransaction()
                     .replace(R.id.content_frame, totalFeesFrag)
                     .commit();
         } else if (id == R.id.monthly_page) {
+            navigationDrawerIndex = 1;
             fragmentManager.beginTransaction()
-                    .replace(R.id.content_frame, new MonthlyFeesFrag())
+                    .replace(R.id.content_frame, monthlyFeesFrag)
                     .commit();
         } else if (id == R.id.nav_manage) {
 
@@ -154,4 +202,5 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
 }
