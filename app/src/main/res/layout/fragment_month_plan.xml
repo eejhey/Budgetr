@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/expenses_per_month_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toLeftOf="@+id/monthly_expense_textview"
+        android:layout_toStartOf="@+id/monthly_expense_textview"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Total Expenses per Month" />
+
+    <TextView
+        android:id="@+id/monthly_expense_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/price_ph"/>
+
+    <TextView
+        android:id="@+id/yearly_expense_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/expenses_per_month_header"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Total Expenses per Year"/>
+
+    <TextView
+        android:id="@+id/yearly_expense_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/expenses_per_month_header"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/price_ph"/>
+
+    <ListView
+        android:id="@+id/monthly_expenses_listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/listview_top_margin"
+        android:layout_below="@id/yearly_expense_header"
+        />
+
+</RelativeLayout>

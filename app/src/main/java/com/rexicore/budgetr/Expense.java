@@ -1,5 +1,7 @@
 package com.rexicore.budgetr;
 
+import java.text.NumberFormat;
+
 /**
  * Created by Eddie on 2/4/2017.
  */
@@ -8,7 +10,7 @@ public class Expense {
     private int id;
     private String title;
     private double amount;
-    private String group = "none";
+    private long group = -1;
     private String category;
 
     public Expense(int _id, String title, double amount, String category) {
@@ -18,7 +20,7 @@ public class Expense {
         this.category = category;
     }
 
-    public Expense(int _id, String title, double amount, String group, String category) {
+    public Expense(int _id, String title, double amount, long group, String category) {
         this.id = _id;
         this.title = title;
         this.amount = amount;
@@ -38,11 +40,18 @@ public class Expense {
         return amount;
     }
 
-    public String getGroup() {
+    public long getGroup() {
         return group;
     }
 
     public String getCategory() {
         return category;
+    }
+
+    public static String format(double amount) {
+        NumberFormat formatter = NumberFormat.getInstance();
+        formatter.setMinimumFractionDigits(2);
+        formatter.setMaximumFractionDigits(2);
+        return "$" + formatter.format(amount);
     }
 }

@@ -116,12 +116,8 @@ public class TotalFeesFrag extends Fragment {
                 totalFeeAmount += expensesCursor.getDouble(expensesCursor.getColumnIndex(DbHandler.FEE_DUE));
             } while (expensesCursor.moveToNext());
         }
-        String amount = "$";
         // Format number to #,###.##
-        NumberFormat formatter = NumberFormat.getInstance();
-        formatter.setMinimumFractionDigits(2);
-        formatter.setMaximumFractionDigits(2);
-        amount += formatter.format(totalFeeAmount);
+        String amount = Expense.format(totalFeeAmount);
         // Show number
         totalFeesAmountTextView.setText(amount);
     }

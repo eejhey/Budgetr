@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -17,13 +18,15 @@ import android.view.View;
 import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity
-            implements NavigationView.OnNavigationItemSelectedListener, NewExpensesWindow.NewExpensesDialogListener,
-            NewGroupWindow.NewGroupWindowListener {
+        implements NavigationView.OnNavigationItemSelectedListener, NewExpensesWindow.NewExpensesDialogListener,
+        NewGroupWindow.NewGroupWindowListener, MonthlyPlansFrag.MonthlyPlansOnClickListener,
+        NewMonthExpenseWindow.NewMonthExpenseListener{
 
+    private int navigationDrawerIndex = 0;
+
+    private long selGroupToAdd = -1;
     private FragmentManager fragmentManager;
     private TotalFeesFrag totalFeesFrag;
-    private MonthlyFeesFrag monthlyFeesFrag;
-    private int navigationDrawerIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +44,12 @@ public class MainActivity extends AppCompatActivity
                         buildNewExpensesWindow();
                         break;
                     case 1:
-                        buildNewGroupWindow();
+                        MonthlyPlansFrag frag = (MonthlyPlansFrag) fragmentManager.findFragmentByTag("MonthlyPlansFrag");
+                        if(frag != null && frag.isVisible()) {
+                            buildNewGroupWindow();
+                        } else {
+                            buildNewMonthExpenseWindow();
+                        }
                         break;
                     default:
                         break;
@@ -63,10 +71,9 @@ public class MainActivity extends AppCompatActivity
         navigationView.getMenu().getItem(0).setChecked(true);
 
         totalFeesFrag = new TotalFeesFrag();
-        monthlyFeesFrag = new MonthlyFeesFrag();
 
         fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, totalFeesFrag).commit();
+        fragmentManager.beginTransaction().replace(R.id.content_frame, totalFeesFrag, "TotalFeesFrag").commit();
 
     }
 
@@ -115,10 +122,18 @@ public class MainActivity extends AppCompatActivity
     private void updateFragUI() {
         switch (navigationDrawerIndex) {
             case 0:
-                totalFeesFrag.updateUI();
+                TotalFeesFrag frag0 = (TotalFeesFrag) fragmentManager.findFragmentByTag("TotalFeesFrag");
+                frag0.updateUI();
                 break;
             case 1:
-                monthlyFeesFrag.updateUI();
+                Fragment fragment = fragmentManager.findFragmentByTag("MonthlyPlansFrag");
+                if (fragment != null && fragment.isVisible()) {
+                    MonthlyPlansFrag frag1 = (MonthlyPlansFrag) fragmentManager.findFragmentByTag("MonthlyPlansFrag");
+                    frag1.updateUI();
+                } else {
+                    MonthlyFeesFrag frag1 = (MonthlyFeesFrag) fragmentManager.findFragmentByTag("MonthlyFeesFrag");
+                    frag1.updateUI();
+                }
                 break;
             default:
                 break;
@@ -133,6 +148,11 @@ public class MainActivity extends AppCompatActivity
     private void buildNewGroupWindow() {
         NewGroupWindow dialog = new NewGroupWindow();
         dialog.show(getSupportFragmentManager(), "new_group");
+    }
+
+    private void buildNewMonthExpenseWindow() {
+        NewMonthExpenseWindow dialog = new NewMonthExpenseWindow();
+        dialog.show(fragmentManager, "new_monthly_expense");
     }
 
     @Override
@@ -175,32 +195,76 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onNewMonthExpensePositiveClick(DialogFragment dialog) {
+        EditText expenseTitle = (EditText) dialog.getDialog().findViewById(R.id.new_month_expense_edittext);
+        EditText expenseMonthlyAmt = (EditText) dialog.getDialog().findViewById(R.id.new_month_expense_monthly_edittext);
+        EditText expenseYearlyAmt = (EditText) dialog.getDialog().findViewById(R.id.new_month_expense_yearly_edittext);
+        // Acquire data
+        String moExpName = expenseTitle.getText().toString();
+
+        double monthlyAmt = 0;
+        if (expenseMonthlyAmt.getText().length() > 0) {
+            // Monthly data entered
+            monthlyAmt = Double.parseDouble(expenseMonthlyAmt.getText().toString());
+        } else if (expenseYearlyAmt.getText().length() > 0) {
+            // No monthly data entered
+            monthlyAmt = Double.parseDouble(expenseYearlyAmt.getText().toString()) / 12.0f;
+        }
+
+        // Create expense for specific group and add to db
+        Expense monthExpense = new Expense(-1, moExpName, monthlyAmt, selGroupToAdd, "monthly");
+        DbHandler db = new DbHandler(this);
+        db.newFee(monthExpense);
+        db.close();
+
+        // Update UI
+        updateFragUI();
+    }
+
+    @Override
+    public void onNewMonthExpenseNegativeClick(DialogFragment dialog) {
+        dialog.getDialog().cancel();
+    }
+
+    @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        Fragment fragment;
+        String tag = "";
 
         if (id == R.id.main_page) {
             // Set main fragment here
             navigationDrawerIndex = 0;
-            fragmentManager.beginTransaction()
-                    .replace(R.id.content_frame, totalFeesFrag)
-                    .commit();
+            tag = "TotalFeesFrag";
         } else if (id == R.id.monthly_page) {
             navigationDrawerIndex = 1;
-            fragmentManager.beginTransaction()
-                    .replace(R.id.content_frame, monthlyFeesFrag)
-                    .commit();
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+            tag = "MonthlyPlansFrag";
         }
+
+        fragment = fragmentManager.findFragmentByTag(tag);
+        if (fragment == null) {
+            if (tag.equals("TotalFeesFrag")) {
+                fragment = new TotalFeesFrag();
+            } else if (tag.equals("MonthlyPlansFrag")) {
+                fragment = new MonthlyPlansFrag();
+            }
+        }
+        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment, tag).commit();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
+    @Override
+    public void onMonthlyPlanClick(long selectedId) {
+        MonthlyFeesFrag fragment = MonthlyFeesFrag.newInstance(selectedId);
+        selGroupToAdd = selectedId;
+
+        fragmentManager.beginTransaction()
+                .addToBackStack(null)
+                .replace(R.id.content_frame, fragment, "MonthlyFeesFrag")
+                .commit();
+    }
 }

@@ -18,22 +18,23 @@ import android.view.WindowManager;
  * Created by Eddie on 2/5/2017.
  */
 
-public class NewGroupWindow extends DialogFragment {
+public class NewMonthExpenseWindow extends DialogFragment {
 
-    public interface NewGroupWindowListener {
-        void onNewGroupDialogPositiveClick(DialogFragment dialog);
-        void onNewGroupDialogNegativeClick(DialogFragment dialog);
+    public interface NewMonthExpenseListener {
+        void onNewMonthExpensePositiveClick(DialogFragment dialog);
+        void onNewMonthExpenseNegativeClick(DialogFragment dialog);
     }
 
-    NewGroupWindowListener mListener;
+    NewMonthExpenseListener mListener;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
         // Verify that the host activity implements the callback interface
         try {
             // Instantiate the NoticeDialogListener so we can send events to the host
-            mListener = (NewGroupWindowListener) context;
+            mListener = (NewMonthExpenseListener) context;
         } catch (ClassCastException e) {
             // The activity doesn't implement the interface, throw exception
             throw new ClassCastException(context.toString()
@@ -44,21 +45,21 @@ public class NewGroupWindow extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        View view = getActivity().getLayoutInflater().inflate(R.layout.new_group_dialog, null);
+        View view = getActivity().getLayoutInflater().inflate(R.layout.new_month_expense_dialog, null);
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setView(view)
-                .setTitle(R.string.new_group)
+                .setTitle(R.string.new_monthly_expense)
                 .setPositiveButton(R.string.add, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mListener.onNewGroupDialogPositiveClick(NewGroupWindow.this);
+                        mListener.onNewMonthExpensePositiveClick(NewMonthExpenseWindow.this);
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mListener.onNewGroupDialogNegativeClick(NewGroupWindow.this);
+                        mListener.onNewMonthExpenseNegativeClick(NewMonthExpenseWindow.this);
                     }
                 });
 
@@ -68,7 +69,7 @@ public class NewGroupWindow extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.new_group_dialog, container);
+        View view = inflater.inflate(R.layout.new_month_expense_dialog, container);
 
         Window window = getDialog().getWindow();
         if (window != null) {

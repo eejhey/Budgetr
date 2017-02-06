@@ -20,7 +20,7 @@ public class DbHandler {
     private DbHelper dbHelper;
     private SQLiteDatabase db;
 
-    private static final int DB_VERSION = 4;
+    private static final int DB_VERSION = 5;
     private static final String DB_NAME = "Budgetr.db";
     private static final String EXPENSES_TBL = "Expenses";
     private static final String GROUPS_TBL = "Groups";
@@ -45,7 +45,7 @@ public class DbHandler {
     public boolean newFee(Expense expense) {
         String title = expense.getTitle();
         String amount = Double.toString(expense.getAmount());
-        String group = expense.getGroup();
+        long group = expense.getGroup();
         String category = expense.getCategory();
 
         try{
@@ -58,12 +58,12 @@ public class DbHandler {
         return true;
     }
 
-    private void _newFee(String title, String amount, String group, String category) throws DbException{
+    private void _newFee(String title, String amount, long group, String category) throws DbException{
         if (title.length() < 1 || category.length() < 1) {
             throw new DbException("Missing parameters");
         }
         if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "Adding new fee: " +
-                                title + ", " + amount);
+                                title + ", " + amount + ", " + group);
 
         db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -79,7 +79,7 @@ public class DbHandler {
         Cursor cursor = null;
 
         try {
-            cursor = _getExpenses(category);
+            cursor = _getExpenses(-1, category);
         } catch (DbException e) {
             e.printStackTrace();
         }
@@ -87,18 +87,48 @@ public class DbHandler {
         return cursor;
     }
 
-    private Cursor _getExpenses(String category) throws DbException {
-        if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "Getting expenses: " + category);
+    public Cursor getExpenses(long group, String category) {
+        Cursor cursor = null;
+
+        try {
+            cursor = _getExpenses(group, category);
+        } catch (DbException e) {
+            e.printStackTrace();
+        }
+
+        return cursor;
+    }
+
+    private Cursor _getExpenses(long group, String category) throws DbException {
+        if (DEBUG_MODE) Log.d(this.getClass().getSimpleName(), "Getting expenses: " + group + ", " + category);
 
         db = dbHelper.getWritableDatabase();
         Cursor c = db.query(
                 EXPENSES_TBL,
                 new String[] {"_id", FEES, FEE_DUE},
-                CATEGORY + " = ?",
-                new String[] {category},
+                GROUP + " = ? AND " + CATEGORY + " = ?",
+                new String[] {Long.toString(group), category},
                 null, null, null
         );
         return c;
+    }
+
+    public boolean removeExpenseByGroup(long groupId) {
+        Cursor cursor = getExpenses(groupId, "monthly");
+
+        if (cursor.moveToFirst()) {
+            do {
+                try{
+                    int expenseId = cursor.getInt(cursor.getColumnIndex("_id"));
+                    _removeExpense(expenseId);
+                } catch (DbException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            } while (cursor.moveToNext());
+        }
+
+        return true;
     }
 
     public boolean removeExpense(int id) {
@@ -248,7 +278,7 @@ public class DbHandler {
                     "_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     FEES + " VARCHAR(64), " +
                     FEE_DUE + " REAL, " +
-                    GROUP + " VARCHAR(64), " +
+                    GROUP + " INTEGER, " +
                     CATEGORY + " VARCHAR(10))";
 
             String CREATE_GROUPS_TBL = "CREATE TABLE IF NOT EXISTS " + GROUPS_TBL + "(" +
